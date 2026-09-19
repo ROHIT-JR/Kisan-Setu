@@ -1,0 +1,67 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGION: us-central1
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and deploy backend
+        run: |
+          gcloud run deploy kisan-setu-backend \
+            --source=./backend \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --min-instances=0 --max-instances=2 --memory=512Mi \
+            --allow-unauthenticated
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and deploy frontend
+        run: |
+          gcloud run deploy kisan-setu-frontend \
+            --source=./frontend \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --min-instances=0 --max-instances=2 --memory=512Mi \
+            --allow-unauthenticated
+
+# Setup required once (Issue #1), by whoever owns Project A:
+#   1. Create a Workload Identity Federation pool + provider for GitHub Actions
+#      (avoids long-lived service account keys — https://github.com/google-github-actions/auth#setup)
+#   2. Create a deploy service account with roles/run.admin + roles/iam.serviceAccountUser
+#   3. Add repo secrets: GCP_PROJECT_ID, GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_DEPLOY_SERVICE_ACCOUNT

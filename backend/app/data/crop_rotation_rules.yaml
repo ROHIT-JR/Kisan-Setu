@@ -1,0 +1,26 @@
+# Deterministic rules for the regenerative advisory engine (Issue #7).
+# rotation_engine.py reads this file; Gemini only narrates its output — it does
+# not decide the recommendations. See AGENTS.md rule 7.
+#
+# This is a Phase 1 placeholder shape, not agronomically reviewed yet.
+# Do not implement rotation_engine.py logic beyond stubs until Issue #7 settles
+# real thresholds with a heavy-reasoning model pass (see AGENTS.md §2).
+
+rules:
+  - id: low_organic_carbon
+    condition: "soil.organic_carbon < 0.5"
+    practice: cover_crop_fym
+    title: "Add a cover crop and farmyard manure"
+    rationale_template: "Organic carbon at {organic_carbon}% is low."
+
+  - id: low_nitrogen_cereal_history
+    condition: "soil.n == 'low' and crop_history.last_crop_type == 'cereal'"
+    practice: legume_rotation
+    title: "Rotate to a legume next season"
+    rationale_template: "Nitrogen is low after a cereal crop; legumes fix nitrogen for the following season."
+
+  - id: high_electrical_conductivity
+    condition: "soil.ec > 4.0"
+    practice: salinity_management
+    title: "Apply salinity management practices"
+    rationale_template: "Electrical conductivity at {ec} dS/m indicates salinity stress."
