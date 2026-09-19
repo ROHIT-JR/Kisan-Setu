@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ML artifacts (large; use GCS or Git LFS instead)
+ml/results/*.onnx
+ml/results/*.pt
+*.onnx
+
+# GCP / Earth Engine credentials
+*-key.json
+service-account*.json
